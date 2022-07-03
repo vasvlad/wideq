@@ -8,6 +8,8 @@ import sys
 import re
 import os.path
 import logging
+from paho.mqtt.client import Client
+import paho.mqtt.client as mqtt
 from typing import List
 from pprint import pprint
 
@@ -103,8 +105,8 @@ def ac_mon(ac):
                 print(
                     "{1}; "
                     "{0.mode.name}; "
-                    "cur {0.temp_cur_f}°F; "
-                    "cfg {0.temp_cfg_f}°F; "
+                    "cur {0.temp_cur_c}°C; "
+                    "cfg {0.temp_cfg_c}°C; "
                     "fan speed {0.fan_speed.name}".format(
                         state, "on" if state.is_on else "off"
                     )
@@ -128,6 +130,47 @@ def mon(client, device_id):
         ac_mon(device_class)
     else:
         gen_mon(client, device_id)
+
+def mqtt(client, device_id):
+    """Monitor any device, displaying generic information about its
+    status.
+    """
+
+    ac = client.get_device_obj(device_id)
+    try:
+        ac.monitor_start()
+    except wideq.core.NotConnectedError:
+        print("Device not available.")
+        return
+
+    mqtt_client = Client()
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect("10.0.0.33", 1883, 60)
+    while True:
+            time.sleep(1)
+            state = ac.poll()
+            if state:
+                print(
+                    "{1}; "
+                    "{0.mode.name}; "
+                    "cur {0.temp_cur_c}°C; "
+                    "cfg {0.temp_cfg_c}°C; "
+                    "fan speed {0.fan_speed.name}".format(
+                        state, "on" if state.is_on else "off"
+                    )
+                )
+            else:
+                print("no state. Wait 1 more second.")
+
+def on_connect(client, userdata, rc):
+    print("Connected with result code "+str(rc))
+    client.subscribe("/devices/wb-w1/controls/28-0000061bb938")
+    
+def on_message(client, userdata, msg):
+    if (msg.topic == "/devices/wb-w1/controls/28-0000061bb938"):
+        print (msg.topic)
+        print (msg.payload)
 
 
 class UserError(Exception):
@@ -206,6 +249,7 @@ def ac_config(client, device_id):
 EXAMPLE_COMMANDS = {
     "ls": ls,
     "mon": mon,
+    "mqtt": mqtt,
     "set-temp": set_temp,
     "set-temp-freezer": set_temp_freezer,
     "turn": turn,
