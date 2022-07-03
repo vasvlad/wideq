@@ -148,9 +148,42 @@ def mqtt(client, device_id):
     mqtt_client.on_message = on_message
     mqtt_client.connect("10.0.0.33", 1883, 60)
     while True:
-            time.sleep(1)
+            time.sleep(10)
             state = ac.poll()
             if state:
+                dict_mode = {}
+                modes = {}
+                modes['ACO'] = 'auto'
+                modes['DRY'] = 'dry'
+                modes['COOL'] = 'cool'
+                modes['HEAT'] = 'heat'
+                modes['FAN'] = 'fan_only'
+                if state.is_on:
+                    dict_mode["mode"] =  modes[state.mode.name]
+                else:
+                    dict_mode["mode"] = "off" 
+                print(dict_mode["mode"])
+
+                fanes = {}
+                modes['HIGH'] = 'high'
+                modes['LOW'] = 'low'
+                modes['NATURE'] = 'auto'
+                modes['MID_HIGH'] = 'med_high'
+                modes['MID'] = 'medium'
+                dict_mode["fan"] =  modes[state.fan_speed.name]
+                dict_mode["temperature"] = state.temp_cur_c
+                dict_mode["cfg_temperature"] =  state.temp_cfg_c
+                mqtt_client.publish("/devices/ac/status",
+                                     json.dumps(dict_mode))
+#                mqtt_client.publish("/devices/ac/status",
+#                    "{1}; "
+#                    "{0.mode.name}; "
+#                    "cur {0.temp_cur_c}°C; "
+#                    "cfg {0.temp_cfg_c}°C; "
+#                    "fan speed {0.fan_speed.name}".format(
+#                        state, "on" if state.is_on else "off")
+#                )
+
                 print(
                     "{1}; "
                     "{0.mode.name}; "
