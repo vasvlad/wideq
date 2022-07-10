@@ -224,6 +224,19 @@ def on_message(client, userdata, msg):
             if str(msg.payload) == "b'fan_only'":
                 ac_client.set_mode2(2)
 
+    if (msg.topic == "/devices/ac/set/fan"):
+        print (str(msg.payload))
+        if str(msg.payload) == "b'auto'":
+            ac_client.set_fan_speed2(8)
+        if str(msg.payload) == "b'high'":
+            ac_client.set_fan_speed2(6)
+        if str(msg.payload) == "b'mid_high'":
+            ac_client.set_fan_speed2(4)
+        if str(msg.payload) == "b'medium'":
+            ac_client.set_fan_speed2(3)
+        if str(msg.payload) == "b'low'":
+            ac_client.set_fan_speed2(5)
+
 
 class UserError(Exception):
     """A user-visible command-line error."""

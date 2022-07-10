@@ -296,6 +296,10 @@ class ACDevice(Device):
         )
         self._set_control("airState.windStrength", speed_value)
 
+    def set_fan_speed2(self, speed):
+        """Set the fan speed to a value from the `ACFanSpeed` enum."""
+        self._set_control("airState.windStrength", speed)
+
     def set_horz_swing(self, swing):
         """Set the horizontal swing to a value from the `ACHSwingMode` enum."""
 
