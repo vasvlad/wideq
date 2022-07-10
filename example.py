@@ -170,9 +170,10 @@ def mqtt(client, device_id):
                 fanes = {}
                 modes['HIGH'] = 'high'
                 modes['LOW'] = 'low'
+                modes['LOW_MID'] = 'low_mid'
                 modes['NATURE'] = 'auto'
-                modes['MID_HIGH'] = 'med_high'
-                modes['MID'] = 'medium'
+                modes['MID_HIGH'] = 'mid_high'
+                modes['MID'] = 'middle'
                 dict_mode["fan"] =  modes[state.fan_speed.name]
                 dict_mode["temperature"] = state.temp_cur_c
                 dict_mode["cfg_temperature"] =  state.temp_cfg_c
@@ -209,34 +210,42 @@ def on_message(client, userdata, msg):
     if (msg.topic == "/devices/ac/set/mode"):
         print (msg.payload)
         print (str(msg.payload))
-        if str(msg.payload) == "b'off'":
+        if str(msg.payload.decode("utf-8")) == "off":
             ac_client.set_on(False)
         else:
             ac_client.set_on(True)
-            if str(msg.payload) == "b'auto'":
+            message = msg.payload.decode("utf-8")
+            if str(message) == "auto":
                 ac_client.set_mode2(6)
-            if str(msg.payload) == "b'cool'":
+            if str(message) == "cool":
                 ac_client.set_mode2(0)
-            if str(msg.payload) == "b'dry'":
+            if str(message) == "dry":
                 ac_client.set_mode2(1)
-            if str(msg.payload) == "b'heat'":
+            if str(message) == "heat":
                 ac_client.set_mode2(4)
-            if str(msg.payload) == "b'fan_only'":
+            if str(message) == "fan_only":
                 ac_client.set_mode2(2)
 
     if (msg.topic == "/devices/ac/set/fan"):
         print (str(msg.payload))
-        if str(msg.payload) == "b'auto'":
+        message = msg.payload.decode("utf-8")
+        if str(message) == "auto":
             ac_client.set_fan_speed2(8)
-        if str(msg.payload) == "b'high'":
+        if str(message) == "high":
             ac_client.set_fan_speed2(6)
-        if str(msg.payload) == "b'mid_high'":
-            ac_client.set_fan_speed2(4)
-        if str(msg.payload) == "b'medium'":
-            ac_client.set_fan_speed2(3)
-        if str(msg.payload) == "b'low'":
+        if str(message) == "mid_high":
             ac_client.set_fan_speed2(5)
+        if str(message) == "middle":
+            ac_client.set_fan_speed2(4)
+        if str(message) == "low_mid":
+            ac_client.set_fan_speed2(3)
+        if str(message) == "low":
+            ac_client.set_fan_speed2(2)
 
+
+    if (msg.topic == "/devices/ac/set/temp"):
+        print(msg.payload.decode("utf-8"))
+        ac_client.set_celsius(msg.payload.decode("utf-8"))
 
 class UserError(Exception):
     """A user-visible command-line error."""
