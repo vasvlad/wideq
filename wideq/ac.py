@@ -310,9 +310,13 @@ class ACDevice(Device):
 
     def set_mode(self, mode):
         """Set the device's operating mode to an `OpMode` value."""
-
         mode_value = self.model.enum_value("airState.opMode", mode.value)
         self._set_control("airState.opMode", mode_value)
+
+    def set_mode2(self, mode):
+        """Set the device's operating mode to an `OpMode` value."""
+        self._set_control("airState.opMode", mode)
+
 
     def set_on(self, is_on):
         """Turn on or off the device (according to a boolean)."""

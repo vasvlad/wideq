@@ -15,6 +15,7 @@ from pprint import pprint
 
 STATE_FILE = "wideq_state.json"
 LOGGER = logging.getLogger("wideq.example")
+ac_client = None
 
 
 def authenticate(gateway):
@@ -137,6 +138,8 @@ def mqtt(client, device_id):
     """
 
     ac = client.get_device_obj(device_id)
+    global ac_client
+    ac_client = ac
     try:
         ac.monitor_start()
     except wideq.core.NotConnectedError:
@@ -147,6 +150,7 @@ def mqtt(client, device_id):
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
     mqtt_client.connect("10.0.0.33", 1883, 60)
+    mqtt_client.loop_start()
     while True:
             time.sleep(10)
             state = ac.poll()
@@ -162,7 +166,6 @@ def mqtt(client, device_id):
                     dict_mode["mode"] =  modes[state.mode.name]
                 else:
                     dict_mode["mode"] = "off" 
-                print(dict_mode["mode"])
 
                 fanes = {}
                 modes['HIGH'] = 'high'
@@ -196,14 +199,30 @@ def mqtt(client, device_id):
             else:
                 print("no state. Wait 1 more second.")
 
-def on_connect(client, userdata, rc):
+#def on_connect(client, userdata, rc):
+def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
-    client.subscribe("/devices/wb-w1/controls/28-0000061bb938")
+    client.subscribe("/devices/ac/set/#")
     
 def on_message(client, userdata, msg):
-    if (msg.topic == "/devices/wb-w1/controls/28-0000061bb938"):
-        print (msg.topic)
+    print (msg.topic)
+    if (msg.topic == "/devices/ac/set/mode"):
         print (msg.payload)
+        print (str(msg.payload))
+        if str(msg.payload) == "b'off'":
+            ac_client.set_on(False)
+        else:
+            ac_client.set_on(True)
+            if str(msg.payload) == "b'auto'":
+                ac_client.set_mode2(6)
+            if str(msg.payload) == "b'cool'":
+                ac_client.set_mode2(0)
+            if str(msg.payload) == "b'dry'":
+                ac_client.set_mode2(1)
+            if str(msg.payload) == "b'heat'":
+                ac_client.set_mode2(4)
+            if str(msg.payload) == "b'fan_only'":
+                ac_client.set_mode2(2)
 
 
 class UserError(Exception):
